@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnamese movie genre trends</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <h1 class="logo">Trend</h1>
+            <nav>
+                <a href="#">Home</a>
+                <a href="#">Courses</a>
+                <a href="#" class="active">Forum</a>
+            </nav>
+            <div class="search-profile">
+                <input type="text" placeholder="Search projects..." class="search-bar">
+                <button class="search-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.85-3.85zm-5.442 1.29a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                    </svg>
+                </button>
+                <img src="/static/images/profile.png" alt="Profile" class="profile-pic">
+            </div>
+        </div>
+    </header>
+    
+    <!-- 메인 섹션: 그래프와 실시간 트렌드 -->
+    <div class="container" style="display: flex;">
+        <!-- Google Trends 검색 섹션 -->
+        <section class="evaluation-section" style="width: 70%;">
+            <div class="container text-center">
+                <h3>Vietnamese movie genre trends</h3>
+                <form id="trends-search-form">
+                    <div class="form-group">
+                        <label for="keywords" class="form-label">Enter Keywords (comma separated):</label>
+                        <input type="text" id="keywords" class="form-control" placeholder="e.g., melo, zombie, romance">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="searchTrends()">Search</button>
+                </form>
+                <div class="evaluation-graph mt-4">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 베트남 실시간 트렌드 순위표 -->
+        <aside class="trending-section" style="width: 30%; margin-left: 10px;">
+            <div class="container text-center">
+                <h3>Vietnam Real-Time Trends</h3>
+                <ul id="trending-genres" class="trending-list">
+                    <!-- 실시간 트렌드 순위 -->
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        let chart;
+
+        // Fetch trends data for graph
+        async function fetchTrendsData(keywords = []) {
+            const response = keywords.length > 0
+                ? await fetch('/search', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ keywords }),
+                  })
+                : await fetch('/data');
+            return response.json();
+        }
+
+        // Render chart
+        async function renderChart(keywords = []) {
+            const data = await fetchTrendsData(keywords);
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            const labels = data.map(item => item.date);
+            const datasets = Object.keys(data[0])
+                .filter(key => key !== 'date' && key !== 'isPartial')
+                .map((key, index) => ({
+                    label: key,
+                    data: data.map(item => item[key]),
+                    borderColor: `hsl(${index * 60}, 70%, 50%)`,
+                    fill: false,
+                    tension: 0.3
+                }));
+
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Google Trends Data' },
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Date' } },
+                        y: { title: { display: true, text: 'Popularity' } },
+                    },
+                },
+            });
+        }
+
+        // Search function for graph
+        async function searchTrends() {
+            const keywordsInput = document.getElementById('keywords').value;
+            const keywords = keywordsInput.split(',').map(k => k.trim()).filter(k => k);
+            if (keywords.length === 0) {
+                alert('Please enter at least one keyword.');
+                return;
+            }
+            await renderChart(keywords);
+        }
+
+        // Fetch Vietnam real-time trends
+        async function fetchVietnamTrends() {
+            try {
+                const response = await fetch('/trends');
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
+
+                const genresList = document.getElementById('trending-genres');
+                genresList.innerHTML = ''; // 기존 목록 초기화
+
+                data.trends.forEach((trend, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${index + 1}. ${trend}`;
+                    genresList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error fetching Vietnam real-time trends:', error);
+            }
+        }
+
+        // Initial load
+        renderChart();
+        fetchVietnamTrends();
+
+        // Refresh Vietnam trends every 5 minutes
+        setInterval(fetchVietnamTrends, 300000);
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-left">
+                <h2>CineCollab</h2>
+                <p>Connecting Korean and Vietnamese filmmakers for creative collaborations.</p>
+            </div>
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-social">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="#"><img src="/static/facebook.png" alt="Facebook"></a>
+                    <a href="#"><img src="/static/twitter.png" alt="Twitter"></a>
+                    <a href="#"><img src="/static/instagram.png" alt="Instagram"></a>
+                    <a href="#"><img src="/static/youtube.png" alt="YouTube"></a>
+                </div>
+            </div>
+            <div class="footer-newsletter">
+                <h3>Newsletter</h3>
+                <form>
+                    <input type="email" placeholder="Enter your email" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="container text-center copyright">
+            <p>&copy; 2025 CineCollab. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
