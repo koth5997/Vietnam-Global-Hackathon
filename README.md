@@ -37,6 +37,6 @@
 해커톤이지만 베트남 it기업 안에서 진행한것이라 오전10시부터 오후7시까지 못하여 시간이 많이 촉박하였지만 그럼에도 최대한 완성할려고 서로 소통을 많이하고 노력도 많이하였습니다.
 이번 베트남 글로벌 해커톤은 기술적 성장뿐만 아니라 국제적인 협업과 창의적인 문제 해결 능력을 기를 수 있었던 뜻깊은 경험이었습니다. 앞으로도 이러한 경험을 바탕으로 다양한 프로젝트에 도전할 계획입니다.
 
-## 프로젝트 링크
+## 프로젝트 링크, 참여 증거 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/koth5997/Vietnam-Global-Hackathon)
-
+https://www.vietnam.vn/ko/sinh-vien-viet-nam-han-quoc-chay-dua-voi-du-an-khoi-nghiep
